@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>YıldızAY - SONSUZ.AY Modüler</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="welcome-overlay">
+    <div class="welcome-icon">🌟</div>
+    <div style="color: #00e5ff; font-weight: bold; letter-spacing: 2px; margin-top: 20px;">YILDIZAY'I UYANDIR</div>
+</div>
+
+<div class="app-wrapper">
+    <div class="header">
+        <div style="width: 24px;"></div>
+        YıldızAY
+        <button id="settings-btn">⚙️</button>
+    </div>
+
+    <div id="settings-panel">
+        <div class="setting-item">
+            <label id="pitch-label">Ses Tonu: <span id="p-val">1.0</span></label>
+            <input type="range" id="pitch-range" min="0.5" max="2" step="0.1" value="1">
+        </div>
+        <div class="setting-item">
+            <label id="rate-label">Konuşma Hızı: <span id="r-val">1.0</span></label>
+            <input type="range" id="rate-range" min="0.5" max="2" step="0.1" value="1">
+        </div>
+    </div>
+
+    <div id="chat-container"></div>
+    <div class="input-area">
+        <button id="mic-btn">🎤</button>
+        <input type="text" id="user-input" placeholder="YıldızAY ile konuş..." autocomplete="off">
+        <button id="send-btn">➤</button>
+    </div>
+</div>
+
+<script src="hafiza.js"></script>
+<script src="motor.js"></script>
+
+</body>
+</html>
