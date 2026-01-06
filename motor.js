@@ -1,6 +1,7 @@
-/* motor.js - YıldızAY Ana İşlemci */
 
-// Değişkenler
+/* motor.js - YıldızAY Akıllı Hafıza ve Bağlam Motoru (V16) */
+
+// --- DEĞİŞKENLER ---
 const chatContainer = document.getElementById('chat-container');
 const userInput = document.getElementById('user-input');
 const sendBtn = document.getElementById('send-btn');
@@ -14,13 +15,19 @@ let voiceRate = localStorage.getItem('yildizay-rate') || 1.0;
 let userName = localStorage.getItem('yildizay-user') || "";
 let currentBattery = "Bilinmiyor";
 
-// Ayarları Yükle
+// --- YENİ: BAĞLAMSAL HAFIZA DEĞİŞKENLERİ ---
+// Son konuşulan mesajı tarayıcı hafızasından çekiyoruz
+let sonKonu = localStorage.getItem('yildizay-son-mesaj') || "Henüz bir şey konuşmadık.";
+// Anlık bağlam (Örn: Konu hava durumuysa buraya not alacağız)
+let aktifBaglam = { konu: null, detay: null };
+
+// --- AYARLARI YÜKLE ---
 document.getElementById('pitch-range').value = voicePitch;
 document.getElementById('p-val').innerText = voicePitch;
 document.getElementById('rate-range').value = voiceRate;
 document.getElementById('r-val').innerText = voiceRate;
 
-// Pil Durumu
+// --- PİL DURUMU TAKİBİ ---
 if ('getBattery' in navigator) {
     navigator.getBattery().then(battery => {
         const updateBattery = () => { currentBattery = Math.round(battery.level * 100) + "%"; };
@@ -29,7 +36,7 @@ if ('getBattery' in navigator) {
     });
 }
 
-// Araçlar
+// --- YARDIMCI ARAÇLAR ---
 function emojiTemizle(text) { return text.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDC00-\uDFFF])/g, ''); }
 
 function konustur(metin) {
@@ -50,6 +57,7 @@ function botEkle(mesaj, seslendir = true) {
     if(seslendir) konustur(mesaj);
 }
 
+// Basit Matematik (Eval)
 function matematikMotoru(input) {
     let temiz = input.toLowerCase().replace(/x/g, '*').replace(/çarpı/g, '*').replace(/artı/g, '+').replace(/eksi/g, '-').replace(/bölü/g, '/');
     let formul = temiz.match(/[0-9+\-*/(). ]+/);
@@ -65,7 +73,7 @@ function matematikMotoru(input) {
     return null;
 }
 
-// Olay Dinleyicileri
+// --- OLAY DİNLEYİCİLERİ ---
 settingsBtn.onclick = () => { settingsPanel.style.display = settingsPanel.style.display === 'block' ? 'none' : 'block'; };
 document.getElementById('pitch-range').oninput = (e) => { voicePitch = e.target.value; document.getElementById('p-val').innerText = voicePitch; localStorage.setItem('yildizay-pitch', voicePitch); };
 document.getElementById('rate-range').oninput = (e) => { voiceRate = e.target.value; document.getElementById('r-val').innerText = voiceRate; localStorage.setItem('yildizay-rate', voiceRate); };
@@ -77,11 +85,12 @@ overlay.addEventListener('click', () => {
     botEkle(selamlama + "SONSUZ.AY asistanı YıldızAY hizmetinizde. 😊");
 });
 
-// Ana Mesaj Gönderme Fonksiyonu
+// --- GÜNCELLENMİŞ GÖNDER FONKSİYONU ---
 function gonder() {
     const text = userInput.value.trim();
     if (!text) return;
 
+    // 1. İsim Değiştirme
     if (text.toLowerCase().startsWith("adım ") || text.toLowerCase().startsWith("ismim ")) {
         let yeniIsim = text.replace(/adım|ismim/gi, "").trim(); 
         if(yeniIsim) {
@@ -93,6 +102,7 @@ function gonder() {
         }
     }
 
+    // Mesajı Ekrana Bas
     const uDiv = document.createElement('div');
     uDiv.className = 'message user-msg';
     uDiv.innerHTML = `<span class="name-tag user-tag">Siz</span>${text}`;
@@ -105,27 +115,109 @@ function gonder() {
         let yanit = "";
         let bulundu = false;
 
-        for (let anahtar in kütüphane) {
-            if (kucuk.includes(anahtar)) {
-                let deger = kütüphane[anahtar];
-                
-                if (Array.isArray(deger)) yanit = deger[Math.floor(Math.random() * deger.length)];
-                else if (deger === "FONKSIYON_SAAT") yanit = "Şu an saat " + new Date().toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'});
-                else if (deger === "FONKSIYON_PIL") yanit = "Pil seviyesi %" + currentBattery;
-                else if (deger === "FONKSIYON_TARIH") yanit = "Bugün: " + new Date().toLocaleDateString('tr-TR', {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'});
-                else yanit = deger;
-                
-                bulundu = true;
+        // --- A. HAFIZA HATIRLAMA (NEREDE KALDIK?) ---
+        if (kucuk.includes("nerede kaldık") || kucuk.includes("en son ne") || kucuk.includes("neyden bahsediyorduk")) {
+            botEkle(`En son şundan bahsediyorduk: "${sonKonu}" 🧠`);
+            return; // Cevabı verdik, çıkabiliriz.
+        }
+
+        // --- YENİ: BAĞLAM KAYDETME (CONTEXT) ---
+        // Eğer kullanıcı "Yozgat" veya "Hava" gibi kelimeler kullanırsa bunu kaydet
+        // (Şimdilik temel düzeyde, ileride burayı hava durumu API'sine bağlayacağız)
+        if (kucuk.includes("yozgat") || kucuk.includes("istanbul") || kucuk.includes("ankara")) {
+            aktifBaglam.detay = text; // Şehir ismini veya cümleyi aklında tutar
+        }
+
+        // Kullanıcının yazdığı son şeyi "SON KONU" olarak kaydet
+        sonKonu = text;
+        localStorage.setItem('yildizay-son-mesaj', sonKonu);
+
+        // --- B. MANUEL ARAŞTIRMA ---
+        if (kucuk.startsWith("ara ")) {
+            let aranacak = text.substring(4).trim();
+            arastirmaYap(aranacak);
+            return;
+        }
+
+        // --- C. MANTIK VE PROBLEM ÇÖZÜCÜ ---
+        if (typeof mantikCozucu !== 'undefined') {
+            let mantikSonucu = mantikCozucu(text);
+            if (mantikSonucu) {
+                botEkle(mantikSonucu);
+                return;
+            }
+        }
+
+        // --- D. KÜTÜPHANE TARAMA (Sohbet & Hafıza) ---
+        function cevapAra(hedefKutuphane) {
+            for (let anahtar in hedefKutuphane) {
+                if (kucuk.includes(anahtar)) {
+                    let deger = hedefKutuphane[anahtar];
+                    if (Array.isArray(deger)) return deger[Math.floor(Math.random() * deger.length)];
+                    else if (deger === "FONKSIYON_SAAT") return "Şu an saat " + new Date().toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'});
+                    else if (deger === "FONKSIYON_PIL") return "Pil seviyesi %" + currentBattery;
+                    else if (deger === "FONKSIYON_TARIH") return "Bugün: " + new Date().toLocaleDateString('tr-TR', {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'});
+                    else return deger;
+                }
+            }
+            return null;
+        }
+
+        if (typeof sohbetKutuphanesi !== 'undefined') {
+            yanit = cevapAra(sohbetKutuphanesi);
+            if (yanit) bulundu = true;
+        }
+
+        if (!bulundu && typeof kütüphane !== 'undefined') {
+            yanit = cevapAra(kütüphane);
+            if (yanit) bulundu = true;
+        }
+
+        if (bulundu) {
+            botEkle(yanit);
+            return;
+        }
+
+        // --- E. WIKI VE MATEMATİK ---
+        let soruKalibi = false;
+        let aranacakKelime = "";
+        const ekler = [" kimdir", " nedir", " neresi", " kim", " ne", " hakkında bilgi"];
+        
+        for (let ek of ekler) {
+            if (kucuk.endsWith(ek)) {
+                aranacakKelime = text.slice(0, -ek.length).trim();
+                soruKalibi = true;
                 break;
             }
         }
 
-        if (!bulundu) {
-            const mat = matematikMotoru(text);
-            yanit = mat ? mat : "Bunu henüz öğrenemedim. Başka bir konuda konuşalım mı? 🛠️";
+        if (soruKalibi && aranacakKelime.length > 1) {
+            arastirmaYap(aranacakKelime);
+            return;
         }
-        botEkle(yanit);
+
+        const mat = matematikMotoru(text);
+        if (mat) {
+            botEkle(mat);
+        } else {
+            botEkle("Bunu hafızamda bulamadım. İnternette aratmak için 'ara [kelime]' yazabilirsin! 🛠️");
+        }
+
     }, 600);
+}
+
+// Yardımcı: Araştırma
+function arastirmaYap(kelime) {
+    if(kelime) {
+        botEkle(`"${kelime}" araştırılıyor... 🔎`);
+        if(typeof wikipediaAra === 'function') {
+            wikipediaAra(kelime).then(cevabi => {
+                botEkle(cevabi);
+            });
+        } else {
+            botEkle("Araştırma modülü eksik! ⚠️");
+        }
+    }
 }
 
 // Sesli Komut
@@ -141,7 +233,7 @@ if(SpeechRecognition) {
 sendBtn.addEventListener('click', gonder);
 userInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') gonder(); });
 
-// Mobil Ekran Ayarı
+// Mobil Ekran
 const updateHeight = () => { document.documentElement.style.setProperty('--app-height', `${window.innerHeight}px`); };
 window.addEventListener('resize', updateHeight);
 updateHeight();
