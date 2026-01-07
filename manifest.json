@@ -1,0 +1,21 @@
+{
+  "name": "SONSUZ.AY Portal",
+  "short_name": "SONSUZ.AY",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#090a0f",
+  "theme_color": "#000000",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "site_simge.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "site_simge.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
