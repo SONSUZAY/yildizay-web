@@ -1,49 +1,95 @@
-/* komut.js - YıldızAY Web Komut Sistemi (Eller ve Ayaklar) */
+/* komut.js - YıldızAY Web Komut Sistemi (V5 - TAM GÜÇ: Site + Uygulamalar + Telefon) */
 
 function komutIsle(metin) {
     let kucuk = metin.toLowerCase();
 
-    // 1. WHATSAPP AÇMA
+    // ==================================================
+    // 1. BÖLÜM: SİTE İÇİ IŞINLANMA (SONSUZ.AY EKO-SİSTEMİ)
+    // ==================================================
+    if (kucuk.includes("oyun aç") || kucuk.includes("oyunlar") || kucuk.includes("canım sıkıldı")) {
+        setTimeout(() => { window.location.href = "https://sonsuzay.github.io/oyunlar-web/"; }, 1000);
+        return "Seni hemen Oyun Arenasına ışınlıyorum! 🕹️ İyi eğlenceler!";
+    }
+
+    if (kucuk.includes("hikaye") || kucuk.includes("oku")) {
+        setTimeout(() => { window.location.href = "https://sonsuzay.github.io/hikayeler-web/"; }, 1000);
+        return "Sonsuz Hikayeler kütüphanesi açılıyor... 📚";
+    }
+
+    if (kucuk.includes("müzik") || kucuk.includes("şarkı") || kucuk.includes("player")) {
+        setTimeout(() => { window.location.href = "https://sonsuzay.github.io/web-uygulamalar/player.html"; }, 1000);
+        return "DJ YıldızAY iş başında! Müzik çalar açılıyor... 🎵";
+    }
+
+    // ==================================================
+    // 2. BÖLÜM: MOBİL GÜÇ GÖSTERİSİ (UYGULAMA AÇMA)
+    // ==================================================
+    
+    // WHATSAPP
     if (kucuk.includes("whatsapp aç") || kucuk.includes("vatsap aç")) {
-        // Telefondaysa uygulamayı, PC'de ise Web sürümünü açar
-        window.open("https://wa.me/", "_blank");
+        window.location.href = "whatsapp://app";
         return "WhatsApp açılıyor... 💬";
     }
 
-    // 2. YOUTUBE AÇMA
-    if (kucuk.includes("youtube aç") || kucuk.includes("youtube'a gir")) {
-        window.open("https://www.youtube.com", "_blank");
-        return "YouTube açılıyor, iyi seyirler! 🎬";
+    // YOUTUBE (Direkt Uygulama)
+    if (kucuk.includes("youtube aç")) {
+        window.location.href = "vnd.youtube://"; 
+        return "YouTube uygulaması başlatılıyor... 🎬";
     }
 
-    // 3. GOOGLE AÇMA
+    // INSTAGRAM
+    if (kucuk.includes("instagram aç") || kucuk.includes("insta aç")) {
+        window.location.href = "instagram://app";
+        return "Instagram akışı açılıyor... 📸";
+    }
+
+    // TIKTOK
+    if (kucuk.includes("tiktok aç")) {
+        window.location.href = "tiktok://";
+        return "TikTok açılıyor... 🎵";
+    }
+
+    // TWITTER (X)
+    if (kucuk.includes("twitter aç") || kucuk.includes("x aç")) {
+        window.location.href = "twitter://";
+        return "X (Twitter) açılıyor... 🐦";
+    }
+
+    // SPOTIFY
+    if (kucuk.includes("spotify aç")) {
+        window.location.href = "spotify://";
+        return "Spotify müzik dünyası açılıyor... 🎧";
+    }
+
+    // ==================================================
+    // 3. BÖLÜM: ARAÇLAR VE ARAMA
+    // ==================================================
+    
+    // HARİTA / KONUM
+    if (kucuk.includes("harita aç") || kucuk.includes("neredeyim")) {
+        window.location.href = "geo:0,0?q="; 
+        return "Haritalar servisi başlatılıyor... 🗺️";
+    }
+
+    // GOOGLE ARAMA
     if (kucuk.includes("google aç")) {
         window.open("https://www.google.com", "_blank");
         return "Google arama motoru açılıyor... 🔍";
     }
 
-    // 4. INSTAGRAM AÇMA
-    if (kucuk.includes("instagram aç")) {
-        window.open("https://www.instagram.com", "_blank");
-        return "Instagram akışı açılıyor... 📸";
-    }
-
-    // 5. HARİTA AÇMA (Konumunla)
-    if (kucuk.includes("harita aç") || kucuk.includes("neredeyim")) {
-        window.open("https://maps.google.com", "_blank");
-        return "Haritalar servisi başlatılıyor... 🗺️";
-    }
-
-    // 6. TELEFON ARAMA (Sadece Mobilde)
-    // Örnek: "155 ara" veya "Annemi ara (numara rehberde yoksa çalışmaz, numara girmeli)"
-    // Burası sadece rakam içeren aramalarda çalışır: "0532... ara"
-    if (kucuk.includes(" ara")) {
+    // TELEFON ARAMA (HATA KORUMALI)
+    // "Aramızda" kelimesini yakalamaz, sadece "ara" emrini yakalar.
+    let aramaKomutu = /\b(ara|ararmısın|arar mısın)\b/;
+    
+    if (aramaKomutu.test(kucuk)) {
         let numara = kucuk.match(/\d+/); // Cümledeki sayıyı bul
-        if (numara) {
+        
+        // Eğer bir numara varsa VE cümle çok uzun değilse (sohbet değilse)
+        if (numara && kucuk.length < 25) {
             window.location.href = "tel:" + numara[0];
             return `${numara[0]} numarası aranıyor... 📞`;
         }
     }
 
-    return null; // Komut yoksa boş dön, motor diğerlerine baksın
+    return null; // Komut yoksa boş dön, diğer modüller devreye girsin.
 }
